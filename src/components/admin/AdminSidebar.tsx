@@ -73,10 +73,10 @@ export function AdminSidebar({ mobileOpen = false, onClose }: AdminSidebarProps)
   };
 
   const navContent = (
-    <div className="flex h-full flex-col justify-between bg-white">
+    <div className="flex h-full flex-col bg-white">
       {/* Brand / Logo */}
-      <div>
-        <div className="flex h-16 items-center justify-between border-b border-gray-200 px-6">
+      <div className="flex min-h-0 flex-1 flex-col">
+        <div className="flex h-16 shrink-0 items-center justify-between border-b border-gray-200 px-6">
           <Link
             href="/admin"
             className="flex items-center gap-2.5 font-sans"
@@ -107,7 +107,7 @@ export function AdminSidebar({ mobileOpen = false, onClose }: AdminSidebarProps)
         </div>
 
         {/* Navigation list */}
-        <div className="px-3 py-4">
+        <div className="flex-1 overflow-y-auto overscroll-contain px-3 py-4">
           <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-gray-600">
             Main Menu
           </p>
@@ -174,7 +174,7 @@ export function AdminSidebar({ mobileOpen = false, onClose }: AdminSidebarProps)
       </div>
 
       {/* Bottom secondary links */}
-      <div className="border-t border-gray-200 p-3">
+      <div className="shrink-0 border-t border-gray-200 p-3">
         <Link
           href="/"
           target="_blank"
@@ -197,7 +197,7 @@ export function AdminSidebar({ mobileOpen = false, onClose }: AdminSidebarProps)
     <>
       {/* Desktop static sidebar */}
       <aside className="hidden w-64 shrink-0 border-r border-gray-200 bg-white lg:block">
-        <div className="sticky top-0 h-screen">{navContent}</div>
+        <div className="sticky top-0 h-dvh">{navContent}</div>
       </aside>
 
       {/* Mobile drawer backdrop and overlay */}
