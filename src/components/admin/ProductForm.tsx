@@ -47,6 +47,7 @@ export default function ProductForm({ initialData, categories }: ProductFormProp
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(null);
   const [error, setError] = useState("");
 
   const departments = categories.filter((c) => !c.parentId);
@@ -140,21 +141,41 @@ export default function ProductForm({ initialData, categories }: ProductFormProp
     setSizes((prev) => prev.filter((s) => s.size !== size));
   };
 
+  // Several photos can be picked at once. They upload a few at a time and are added in the order
+  // chosen; a photo that fails is reported and the rest are still kept.
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files ?? []);
+    e.target.value = "";
+    if (files.length === 0) return;
 
     setUploading(true);
-    try {
-      const url = await uploadToCloudinary(file, "rebel-season/products");
-      setFormData((prev) => ({ ...prev, images: [...prev.images, url] }));
-    } catch (err) {
-      console.error("Upload failed", err);
-      setError(err instanceof Error ? err.message : "Image upload failed");
-    } finally {
-      e.target.value = "";
-      setUploading(false);
-    }
+    setError("");
+    setUploadProgress({ done: 0, total: files.length });
+    const urls: (string | null)[] = new Array(files.length).fill(null);
+    const failed: string[] = [];
+    let next = 0;
+    let done = 0;
+
+    const worker = async () => {
+      while (next < files.length) {
+        const index = next++;
+        try {
+          urls[index] = await uploadToCloudinary(files[index], "rebel-season/products");
+        } catch (err) {
+          console.error("Upload failed", err);
+          failed.push(`${files[index].name} (${err instanceof Error ? err.message : "upload failed"})`);
+        }
+        done += 1;
+        setUploadProgress({ done, total: files.length });
+      }
+    };
+    await Promise.all(Array.from({ length: Math.min(3, files.length) }, worker));
+
+    const uploaded = urls.filter((url): url is string => url !== null);
+    if (uploaded.length) setFormData((prev) => ({ ...prev, images: [...prev.images, ...uploaded] }));
+    if (failed.length) setError(`${failed.length} of ${files.length} photos did not upload: ${failed.join(", ")}`);
+    setUploadProgress(null);
+    setUploading(false);
   };
 
   // The first image is the cover shown on product cards and as the main photo.
@@ -641,14 +662,22 @@ export default function ProductForm({ initialData, categories }: ProductFormProp
           ))}
           <label className="relative aspect-[3/4] bg-gray-50 rounded-md border-2 border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors">
             {uploading ? (
-              <Loader2 className="animate-spin text-gray-400" size={24} />
+              <>
+                <Loader2 className="animate-spin text-gray-400 mb-2" size={24} />
+                {uploadProgress && (
+                  <span className="text-sm text-gray-500">
+                    {uploadProgress.done} of {uploadProgress.total}
+                  </span>
+                )}
+              </>
             ) : (
               <>
                 <Upload className="text-gray-400 mb-2" size={24} />
-                <span className="text-sm text-gray-500">Upload Image</span>
+                <span className="text-sm text-gray-500">Upload Images</span>
+                <span className="mt-1 text-[11px] text-gray-400">Select one or more</span>
               </>
             )}
-            <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={uploading} />
+            <input type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} disabled={uploading} />
           </label>
         </div>
       </div>
