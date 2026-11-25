@@ -21,7 +21,7 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
   const totalPages = Math.ceil(total / limit);
 
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Products</h1>
         <Link
@@ -33,8 +33,8 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
         </Link>
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-        <table className="w-full text-left border-collapse">
+      <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-x-auto">
+        <table className="w-full min-w-[820px] text-left border-collapse">
           <thead>
             <tr className="bg-gray-50 border-b border-gray-200 text-sm text-gray-600">
               <th className="p-4 font-medium">Image</th>
