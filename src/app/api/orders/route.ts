@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { getCustomerSession } from "@/lib/auth";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { addressSchema, cartSchema, createPendingOrder } from "@/lib/checkout";
+import { INSTAGRAM_ERROR, normalizeInstagramUsername } from "@/lib/instagram";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +12,7 @@ const orderRequestSchema = z.object({
   items: cartSchema,
   address: addressSchema,
   phone: z.string().trim().max(20).optional().default(""),
+  instagram: z.string().trim().max(200).optional().default(""),
   couponCode: z.string().trim().max(50).nullish(),
   expectedTotal: z.number().int().nonnegative().optional(),
 });
@@ -41,11 +43,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Please provide a valid phone number." }, { status: 400 });
     }
 
+    const instagramUsername = normalizeInstagramUsername(parsed.data.instagram);
+    if (!instagramUsername) {
+      return NextResponse.json({ error: INSTAGRAM_ERROR }, { status: 400 });
+    }
+
     const result = await createPendingOrder({
       userId: session.userId,
       name: session.name ?? "",
       email: session.email ?? "",
       phone,
+      instagramUsername,
       items,
       address: { ...address, phone: address.phone || phone },
       couponCode,

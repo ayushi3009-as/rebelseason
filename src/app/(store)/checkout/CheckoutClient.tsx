@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/cart-context";
 import { shippingFor } from "@/lib/pricing";
+import { INSTAGRAM_ERROR, normalizeInstagramUsername } from "@/lib/instagram";
 import { buildBill } from "@/lib/bill";
 import { cldImage } from "@/lib/images";
 import { siteConfig } from "@/lib/site-config";
@@ -54,6 +55,7 @@ export default function CheckoutClient({ session }: { session: CheckoutSession }
   const [showNewAddress, setShowNewAddress] = useState(false);
   const [email, setEmail] = useState(session?.email || "");
   const [phone, setPhone] = useState("");
+  const [instagram, setInstagram] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [checkoutError, setCheckoutError] = useState("");
   // Set once Razorpay reports success, so clearing the cart doesn't flash the
@@ -241,6 +243,12 @@ export default function CheckoutClient({ session }: { session: CheckoutSession }
       return;
     }
 
+    const instagramUsername = normalizeInstagramUsername(instagram);
+    if (!instagramUsername) {
+      setCheckoutError(INSTAGRAM_ERROR);
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       // Start loading the payment SDK while the order is being created.
@@ -253,6 +261,7 @@ export default function CheckoutClient({ session }: { session: CheckoutSession }
           items: cartPayload(),
           address: { ...finalAddress, phone: finalPhone },
           phone: finalPhone,
+          instagram: instagramUsername,
           couponCode: appliedCoupon?.code || null,
           expectedTotal: total,
         })
@@ -436,6 +445,29 @@ export default function CheckoutClient({ session }: { session: CheckoutSession }
                   <Input type="text" inputMode="numeric" pattern="\d{6}" maxLength={6} placeholder="PIN Code" required value={newAddress.pincode} onChange={e => setNewAddress({...newAddress, pincode: e.target.value})} className="w-full h-12 rounded-none bg-secondary/50 border-border col-span-2 sm:col-span-1" />
                 </div>
               )}
+            </section>
+
+            {/* Instagram */}
+            <section>
+              <h2 className="text-lg font-medium mb-1">Instagram Username</h2>
+              <p className="text-sm text-muted-foreground mb-4">Required. We use it to keep you updated about your order.</p>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden="true">@</span>
+                <Input
+                  type="text"
+                  name="instagram"
+                  placeholder="your_username"
+                  value={instagram}
+                  onChange={(e) => setInstagram(e.target.value)}
+                  required
+                  maxLength={100}
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  aria-label="Instagram username"
+                  className="w-full h-12 rounded-none bg-secondary/50 border-border pl-9"
+                />
+              </div>
             </section>
 
             {/* Coupon */}

@@ -171,6 +171,7 @@ export interface CreateOrderInput {
   name: string;
   email: string;
   phone: string;
+  instagramUsername: string;
   items: CartInput;
   address: z.infer<typeof addressSchema>;
   couponCode?: string | null;
@@ -241,6 +242,7 @@ export async function createPendingOrder(input: CreateOrderInput): Promise<Creat
       customerName: input.address.name || input.name,
       customerEmail: input.email,
       customerPhone: input.phone,
+      instagramUsername: input.instagramUsername,
       subtotal: pricing.subtotal,
       discount,
       shipping,

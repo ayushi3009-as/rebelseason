@@ -165,6 +165,19 @@ export default async function OrderDetailPage({
                   {isShop ? [order.customerPhone, order.customerEmail].filter(Boolean).join(" · ") || "-" : order.customerEmail}
                 </p>
               </div>
+              {!isShop && order.instagramUsername && (
+                <div>
+                  <p className="text-gray-500">Instagram</p>
+                  <a
+                    href={`https://www.instagram.com/${encodeURIComponent(order.instagramUsername)}/`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-gray-900 underline underline-offset-2"
+                  >
+                    @{order.instagramUsername}
+                  </a>
+                </div>
+              )}
               {isShop && order.cashier && (
                 <div>
                   <p className="text-gray-500">Served by</p>

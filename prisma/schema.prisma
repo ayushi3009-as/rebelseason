@@ -238,6 +238,8 @@ model Order {
   customerName    String
   customerEmail   String
   customerPhone   String?
+  // Instagram username the customer gave at checkout (required for online orders).
+  instagramUsername String?
   shippingAddress Json
   trackingUrl     String?
   couponCode      String?
