@@ -2,15 +2,26 @@ import nodemailer from 'nodemailer';
 import { siteConfig } from '@/lib/site-config';
 import { buildBill, formatINR } from '@/lib/bill';
 
-export const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_APP_PASSWORD,
-  },
-});
+const smtpAuth = {
+  user: process.env.EMAIL_USER,
+  pass: process.env.EMAIL_APP_PASSWORD,
+};
+const smtpPort = Number(process.env.EMAIL_PORT) || 587;
 
-const FROM_ADDRESS = process.env.EMAIL_USER || 'noreply@rebelseason.com';
+// With EMAIL_HOST set (e.g. smtp-relay.brevo.com) mail goes through that SMTP
+// service. Without it, mail goes through Gmail exactly as before.
+export const transporter = process.env.EMAIL_HOST
+  ? nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: smtpPort,
+      secure: smtpPort === 465,
+      auth: smtpAuth,
+    })
+  : nodemailer.createTransport({ service: "gmail", auth: smtpAuth });
+
+// The visible sender. With a mail service this must be an address on the
+// verified domain (EMAIL_FROM), not the SMTP login.
+const FROM_ADDRESS = process.env.EMAIL_FROM || process.env.EMAIL_USER || "noreply@rebelseason.com";
 
 // Customer-supplied values (names, addresses) must be escaped before going into HTML.
 function esc(value: unknown): string {
@@ -66,6 +77,7 @@ export async function sendOtpEmail(to: string, otp: string): Promise<boolean> {
 
   const mailOptions = {
     from: `"The Rebel Season" <${FROM_ADDRESS}>`,
+    replyTo: siteConfig.supportEmail,
     to,
     subject: "Your Rebel Season verification code",
     text,
