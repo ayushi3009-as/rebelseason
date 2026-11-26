@@ -196,7 +196,7 @@ export default function CheckoutClient({ session }: { session: CheckoutSession }
 
   const subtotal = getTotal();
   const discount = appliedCoupon?.discount || 0;
-  const shipping = shippingFor(subtotal);
+  const shipping = shippingFor(subtotal, items.reduce((n, i) => n + i.quantity, 0));
   const total = Math.max(0, subtotal - discount + shipping);
   const bill = buildBill({
     items: items.map((i) => ({ name: i.name, quantity: i.quantity, price: i.price, mrp: i.originalPrice })),

@@ -264,6 +264,12 @@ export async function sendContactMessageEmail(msg: { name: string; email: string
 
   try {
     if (!process.env.EMAIL_USER || !process.env.EMAIL_APP_PASSWORD) {
+      // In production a missing mail login must be an error: pretending the
+      // message was sent would silently lose it.
+      if (process.env.NODE_ENV === "production") {
+        console.error("Contact form: EMAIL_USER / EMAIL_APP_PASSWORD are not set, message not delivered.");
+        return false;
+      }
       console.log("[MOCK EMAIL] Contact message from " + msg.email);
       return true;
     }

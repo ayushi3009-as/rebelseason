@@ -25,7 +25,7 @@ export default function ShippingPolicyPage() {
         <h2>Shipping charges</h2>
         <ul>
           <li>Free shipping on orders above ₹{c.freeShippingThreshold.toLocaleString("en-IN")}.</li>
-          <li>A flat fee of ₹{c.shippingFee} applies to orders of ₹{c.freeShippingThreshold.toLocaleString("en-IN")} or less.</li>
+          <li>On orders of ₹{c.freeShippingThreshold.toLocaleString("en-IN")} or less, shipping is ₹{c.shippingBaseFee} for the first item and ₹{c.shippingExtraItemFee} for each additional item, up to a maximum of ₹{c.shippingMaxFee} per order.</li>
           <li>The shipping charge for your order is shown at checkout before you pay.</li>
         </ul>
       </section>

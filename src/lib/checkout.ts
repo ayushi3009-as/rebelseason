@@ -202,7 +202,7 @@ export async function createPendingOrder(input: CreateOrderInput): Promise<Creat
     couponCode = coupon.code;
   }
 
-  const shipping = shippingFor(pricing.subtotal);
+  const shipping = shippingFor(pricing.subtotal, pricing.lines.reduce((n, l) => n + l.quantity, 0));
   const total = pricing.subtotal - discount + shipping;
   if (total < 1) {
     return { ok: false, status: 400, error: "Order total must be at least ₹1." };

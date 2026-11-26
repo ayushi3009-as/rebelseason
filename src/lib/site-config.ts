@@ -1,4 +1,4 @@
-import { FREE_SHIPPING_THRESHOLD, SHIPPING_FEE } from "@/lib/pricing";
+import { FREE_SHIPPING_THRESHOLD, SHIPPING_BASE_FEE, SHIPPING_EXTRA_ITEM_FEE, SHIPPING_MAX_FEE } from "@/lib/pricing";
 
 // Business details shown on the Contact and policy pages. Razorpay's website
 // review checks these against the Udyam certificate and the Razorpay account,
@@ -28,6 +28,8 @@ export const siteConfig = {
   // Time for an approved refund to reach the customer's original payment method.
   refundProcessingDays: "5–7 business days",
   freeShippingThreshold: FREE_SHIPPING_THRESHOLD,
-  shippingFee: SHIPPING_FEE,
+  shippingBaseFee: SHIPPING_BASE_FEE,
+  shippingExtraItemFee: SHIPPING_EXTRA_ITEM_FEE,
+  shippingMaxFee: SHIPPING_MAX_FEE,
   jurisdiction: "India",
 };
