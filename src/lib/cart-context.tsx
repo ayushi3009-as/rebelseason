@@ -13,7 +13,14 @@ export type CartItem = {
   originalPrice?: number;
   image: string;
   quantity: number;
+  // Pieces in stock when the item was added. The cart never goes above this
+  // (the server re-checks stock when the order is placed).
+  maxQuantity?: number;
 };
+
+export function maxQuantityFor(item: Pick<CartItem, "maxQuantity">): number {
+  return Math.max(1, Math.min(MAX_QTY_PER_LINE, item.maxQuantity ?? MAX_QTY_PER_LINE));
+}
 
 type CartContextType = {
   items: CartItem[];
@@ -36,7 +43,9 @@ function loadCart(): CartItem[] {
     const stored = localStorage.getItem(CART_STORAGE_KEY);
     const parsed = stored ? JSON.parse(stored) : [];
     return Array.isArray(parsed)
-      ? parsed.filter((i) => i && typeof i.productId === "string" && Number.isInteger(i.quantity) && i.quantity > 0)
+      ? parsed
+          .filter((i) => i && typeof i.productId === "string" && Number.isInteger(i.quantity) && i.quantity > 0)
+          .map((i) => ({ ...i, quantity: Math.min(i.quantity, maxQuantityFor(i)) }))
       : [];
   } catch {
     return [];
@@ -77,13 +86,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
       if (existingIndex >= 0) {
         // Increase quantity of existing item
         const updated = [...prev];
+        const merged = { ...updated[existingIndex], maxQuantity: newItem.maxQuantity ?? updated[existingIndex].maxQuantity };
         updated[existingIndex] = {
-          ...updated[existingIndex],
-          quantity: Math.min(MAX_QTY_PER_LINE, updated[existingIndex].quantity + newItem.quantity),
+          ...merged,
+          quantity: Math.min(maxQuantityFor(merged), merged.quantity + newItem.quantity),
         };
         return updated;
       }
-      return [...prev, { ...newItem, quantity: Math.min(MAX_QTY_PER_LINE, newItem.quantity) }];
+      return [...prev, { ...newItem, quantity: Math.min(maxQuantityFor(newItem), newItem.quantity) }];
     });
   }, []);
 
@@ -102,7 +112,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setItems((prev) =>
         prev.map((item) =>
           item.productId === productId && item.size === size
-            ? { ...item, quantity: Math.min(MAX_QTY_PER_LINE, quantity) }
+            ? { ...item, quantity: Math.min(maxQuantityFor(item), quantity) }
             : item
         )
       );

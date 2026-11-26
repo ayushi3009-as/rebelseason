@@ -57,7 +57,7 @@ export function ProductClient({
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [notice, setNotice] = useState<{ kind: "error" | "added"; text: string } | null>(null);
-  const { addItem } = useCart();
+  const { items, addItem } = useCart();
   const router = useRouter();
 
   const selectedVariant = product.variants?.find(v => v.size === selectedSize);
@@ -65,7 +65,13 @@ export function ProductClient({
     ? product.variants.every(v => v.stock <= 0)
     : product.stock <= 0;
   const available = product.hasVariants ? (selectedVariant?.stock ?? MAX_QTY_PER_LINE) : product.stock;
-  const maxQty = Math.max(1, Math.min(MAX_QTY_PER_LINE, available));
+  const cap = Math.max(0, Math.min(MAX_QTY_PER_LINE, available));
+  // Pieces of this exact product/size already in the cart count against stock.
+  const inCart = items.find((i) => i.productId === product.id && i.size === (selectedSize || undefined))?.quantity ?? 0;
+  const remaining = Math.max(0, cap - inCart);
+  const atLimit = !isSoldOut && inCart > 0 && remaining === 0;
+  const maxQty = Math.max(1, remaining);
+  const qty = Math.min(quantity, maxQty);
 
   // Stock of what the shopper is looking at: the chosen size, or the whole product.
   const stockInView = product.hasVariants ? selectedVariant?.stock : product.stock;
@@ -87,16 +93,20 @@ export function ProductClient({
       price: product.price,
       originalPrice: product.originalPrice && product.originalPrice > product.price ? product.originalPrice : undefined,
       image: product.images[0],
-      quantity: Math.min(quantity, maxQty)
+      quantity: qty,
+      maxQuantity: cap,
     });
     return true;
   };
 
   const handleAdd = () => {
+    if (atLimit) return;
     if (addSelectionToCart()) setNotice({ kind: "added", text: "Added to your cart." });
   };
 
   const handleBuyNow = () => {
+    // Everything available is already in the cart: go straight to checkout.
+    if (atLimit) { router.push('/checkout'); return; }
     if (addSelectionToCart()) router.push('/checkout');
   };
 
@@ -149,15 +159,15 @@ export function ProductClient({
           <span className="text-[11px] font-semibold tracking-[0.1em] uppercase mb-3 block">Quantity</span>
           <div className="flex items-center border border-border w-32 h-12">
             <button
-              onClick={() => setQuantity(Math.max(1, quantity - 1))}
+              onClick={() => setQuantity(Math.max(1, qty - 1))}
               aria-label="Decrease quantity"
               className="flex-1 flex justify-center items-center text-muted-foreground hover:text-foreground transition-colors"
             >
               <Minus className="w-4 h-4 stroke-[1.5]" />
             </button>
-            <span className="flex-1 text-center text-[13px] font-medium" aria-live="polite">{quantity}</span>
+            <span className="flex-1 text-center text-[13px] font-medium" aria-live="polite">{qty}</span>
             <button
-              onClick={() => setQuantity(Math.min(maxQty, quantity + 1))}
+              onClick={() => setQuantity(Math.min(maxQty, qty + 1))}
               aria-label="Increase quantity"
               className="flex-1 flex justify-center items-center text-muted-foreground hover:text-foreground transition-colors"
             >
@@ -175,7 +185,14 @@ export function ProductClient({
         </p>
       ) : null}
 
-      <Button onClick={handleAdd} disabled={isSoldOut} className="w-full h-14 rounded-none font-semibold uppercase tracking-[0.2em] text-[11px] mb-4 bg-foreground text-background hover:bg-foreground/90">
+      {atLimit && (
+        <p className="mb-4 text-[13px] font-medium text-amber-700">
+          {cap === 1 ? "The only piece" : `All ${cap} available pieces`} {cap === 1 ? "is" : "are"} already in your cart.{" "}
+          <Link href="/cart" className="underline underline-offset-4">View cart</Link>
+        </p>
+      )}
+
+      <Button onClick={handleAdd} disabled={isSoldOut || atLimit} className="w-full h-14 rounded-none font-semibold uppercase tracking-[0.2em] text-[11px] mb-4 bg-foreground text-background hover:bg-foreground/90">
         Add to Cart
       </Button>
 

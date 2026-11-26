@@ -3,9 +3,8 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Minus, Plus, X } from "lucide-react";
-import { useCart } from "@/lib/cart-context";
+import { useCart, maxQuantityFor } from "@/lib/cart-context";
 import { cldImage } from "@/lib/images";
-import { MAX_QTY_PER_LINE } from "@/lib/pricing";
 import { buildBill } from "@/lib/bill";
 
 export default function CartPage() {
@@ -81,8 +80,9 @@ export default function CartPage() {
                       <span className="flex-1 text-center text-sm font-medium">{item.quantity}</span>
                       <button 
                         onClick={() => updateQuantity(item.productId, item.size, item.quantity + 1)}
-                        disabled={item.quantity >= MAX_QTY_PER_LINE}
-                        className="flex-1 flex justify-center items-center text-muted-foreground hover:text-foreground"
+                        disabled={item.quantity >= maxQuantityFor(item)}
+                        aria-label="Increase quantity"
+                        className="flex-1 flex justify-center items-center text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed"
                       >
                         <Plus className="w-3 h-3" />
                       </button>
