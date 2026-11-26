@@ -50,25 +50,25 @@ function wrapHtml(content: string): string {
 </html>`;
 }
 
+// Kept deliberately plain (no logo, colours, boxes or footer links) with a
+// plain-text twin: automated mail that looks like a template is far more likely
+// to be flagged as spam by Gmail.
 export async function sendOtpEmail(to: string, otp: string): Promise<boolean> {
-  const html = wrapHtml(`
-    <h2 style="margin: 0 0 20px; font-size: 20px; color: #111111; text-align: center;">Your Verification Code</h2>
-    <p style="margin: 0 0 24px; font-size: 16px; color: #444444; line-height: 1.5; text-align: center;">
-      Please use the following code to verify your account or complete your login.
-    </p>
-    <div style="background-color: #FDF0F4; border-radius: 8px; padding: 24px; text-align: center; margin-bottom: 24px;">
-      <span style="font-size: 32px; font-weight: 700; letter-spacing: 6px; color: #db2777;">${otp}</span>
-    </div>
-    <p style="margin: 0; font-size: 14px; color: #666666; text-align: center;">
-      This code expires in 10 minutes. If you did not request this, please ignore this email.
-    </p>
-  `);
+  const text = [
+    "Your Rebel Season verification code is " + otp + ".",
+    "",
+    "It expires in 10 minutes. If you did not request it, you can ignore this email.",
+  ].join("\n");
+
+  const html = `<p style="font-family: Arial, sans-serif; font-size: 15px; color: #222222;">Your Rebel Season verification code is:</p>
+<p style="font-family: Arial, sans-serif; font-size: 24px; font-weight: bold; letter-spacing: 4px; color: #222222;">${esc(otp)}</p>
+<p style="font-family: Arial, sans-serif; font-size: 13px; color: #555555;">It expires in 10 minutes. If you did not request it, you can ignore this email.</p>`;
 
   const mailOptions = {
     from: `"The Rebel Season" <${FROM_ADDRESS}>`,
-    replyTo: siteConfig.supportEmail,
     to,
-    subject: "Your Verification Code - The Rebel Season",
+    subject: "Your Rebel Season verification code",
+    text,
     html,
   };
 
