@@ -2,6 +2,8 @@ import { getAllOrders, getOrdersCount } from "@/lib/dal/orders";
 import { Pagination } from "@/components/ui/Pagination";
 import Link from "next/link";
 import { format } from "date-fns";
+import { closeAbandonedOrders } from "@/lib/abandoned-orders";
+import { paymentIssue } from "@/lib/order-status";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +19,9 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
   const channel = resolvedParams.channel === "online" ? "ONLINE" : resolvedParams.channel === "shop" ? "POS" : undefined;
   const limit = 10;
   const skip = (page - 1) * limit;
+
+  // Tidy up unpaid orders older than a day before listing (a daily cron job does this too).
+  await closeAbandonedOrders().catch((e) => console.error("closeAbandonedOrders failed:", e));
 
   const [orders, total] = await Promise.all([
     getAllOrders({ skip, limit, search, channel }),
@@ -132,9 +137,14 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
                     </div>
                   </td>
                   <td className="whitespace-nowrap px-6 py-4">
-                    <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ring-1 ring-inset ${getStatusColor(order.status)}`}>
-                      {order.status}
-                    </span>
+                    {(() => {
+                      const issue = order.channel === "ONLINE" ? paymentIssue(order.status, order.payment?.status) : null;
+                      return (
+                        <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ring-1 ring-inset ${issue ? issue.adminClass : getStatusColor(order.status)}`}>
+                          {issue ? issue.label : order.status}
+                        </span>
+                      );
+                    })()}
                   </td>
                   <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
                     <Link

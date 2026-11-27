@@ -2,7 +2,6 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { DropCountdown } from "@/components/home/DropCountdown";
-import { DropRail } from "@/components/home/DropRail";
 import { compareSizes } from "@/lib/catalog-config";
 import { DROP_TIME_LABEL, formatDropTime, formatDropDateTime, formatDropWeekday } from "@/lib/drop";
 import { cldImage } from "@/lib/images";
@@ -38,8 +37,8 @@ function Ticker() {
 }
 
 function DropCard({ product, index }: { product: DropProduct; index: number }) {
-  const image = cldImage(product.images[0], 800);
-  const hoverImage = product.images.length > 1 ? cldImage(product.images[1], 800) : null;
+  const image = cldImage(product.images[0], 400);
+  const hoverImage = product.images.length > 1 ? cldImage(product.images[1], 400) : null;
   const totalStock = product.hasVariants ? product.variants.reduce((sum, v) => sum + (v.stock || 0), 0) : product.stock;
   const soldOut = totalStock <= 0;
   const onSale = product.originalPrice !== null && product.originalPrice > product.price;
@@ -49,57 +48,56 @@ function DropCard({ product, index }: { product: DropProduct; index: number }) {
       : [];
 
   return (
-    <Link prefetch={false}
+    <Link
+      prefetch={false}
       href={`/products/${product.slug}`}
-      className="group relative block w-[72%] shrink-0 snap-start overflow-hidden rounded-2xl bg-white/5 sm:w-[44%] md:w-[31%] lg:w-[23.5%]"
-      style={{ aspectRatio: "3 / 4.3" }}
+      className="group flex items-stretch gap-4 overflow-hidden rounded-2xl bg-white/5 p-3 transition-colors hover:bg-white/10 sm:gap-6 sm:p-4"
       aria-label={`${product.name}, ${soldOut ? "sold out" : "view piece"}`}
     >
-      {image && (
-        <img
-          src={image}
-          alt=""
-          loading={index < 3 ? "eager" : "lazy"}
-          decoding="async"
-          className={`absolute inset-0 h-full w-full object-cover transition-all duration-700 ease-out group-hover:scale-105 ${hoverImage ? "group-hover:opacity-0" : ""} ${soldOut ? "grayscale" : ""}`}
-        />
-      )}
-      {hoverImage && (
-        <img
-          src={hoverImage}
-          alt=""
-          loading="lazy"
-          decoding="async"
-          className="absolute inset-0 h-full w-full scale-105 object-cover opacity-0 transition-opacity duration-700 ease-out group-hover:opacity-100"
-        />
-      )}
-
-      {/* Readability for the text at the bottom */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-black/10" />
-
-      <div className="absolute left-3 right-3 top-3 flex items-start justify-between gap-2">
-        <span className="rounded-full bg-primary px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-primary-foreground shadow">
-          Dropped {formatDropTime(product.releaseAt)}
-        </span>
-        {soldOut ? (
-          <span className="rounded-full bg-black/80 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white">Sold out</span>
-        ) : totalStock <= LOW_STOCK_AT ? (
-          <span className="rounded-full bg-white/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground">
-            Only {totalStock} left
-          </span>
-        ) : null}
+      <div className="relative w-32 shrink-0 overflow-hidden rounded-xl bg-white/5 sm:w-44 md:w-52" style={{ aspectRatio: "3 / 4" }}>
+        {image && (
+          <img
+            src={image}
+            alt=""
+            loading={index < 2 ? "eager" : "lazy"}
+            decoding="async"
+            className={`absolute inset-0 h-full w-full object-cover transition-all duration-700 ease-out group-hover:scale-105 ${hoverImage ? "group-hover:opacity-0" : ""} ${soldOut ? "grayscale" : ""}`}
+          />
+        )}
+        {hoverImage && (
+          <img
+            src={hoverImage}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            className="absolute inset-0 h-full w-full scale-105 object-cover opacity-0 transition-opacity duration-700 ease-out group-hover:opacity-100"
+          />
+        )}
       </div>
 
-      <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5 text-background">
-        <h3 className="font-heading text-lg leading-snug sm:text-xl">{product.name}</h3>
-        <p className="mt-1.5 flex items-center gap-2.5 text-sm">
+      <div className="flex min-w-0 flex-1 flex-col justify-center py-1 text-background">
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          <span className="rounded-full bg-primary px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-primary-foreground">
+            Dropped {formatDropTime(product.releaseAt)}
+          </span>
+          {soldOut ? (
+            <span className="rounded-full bg-black/80 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white">Sold out</span>
+          ) : totalStock <= LOW_STOCK_AT ? (
+            <span className="rounded-full bg-white/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground">
+              Only {totalStock} left
+            </span>
+          ) : null}
+        </div>
+
+        <h3 className="font-heading text-xl leading-snug sm:text-2xl">{product.name}</h3>
+        <p className="mt-2 flex items-center gap-2.5 text-sm sm:text-base">
           {onSale && <span className="text-background/55 line-through">₹{product.originalPrice?.toLocaleString("en-IN")}</span>}
           <span className="font-semibold">₹{product.price.toLocaleString("en-IN")}</span>
         </p>
-        {sizes.length > 0 && <p className="mt-2 text-[11px] tracking-wide text-background/70">{sizes.join("  ·  ")}</p>}
+        {sizes.length > 0 && <p className="mt-2 text-[11px] tracking-wide text-background/70 sm:text-xs">{sizes.join("  ·  ")}</p>}
 
-        <span className="mt-4 flex h-0 items-center gap-1.5 overflow-hidden text-[11px] font-semibold uppercase tracking-[0.2em] opacity-0 transition-all duration-300 group-hover:h-5 group-hover:opacity-100">
-          View piece <ArrowUpRight className="h-3.5 w-3.5" />
+        <span className="mt-4 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
+          View piece <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
         </span>
       </div>
     </Link>
@@ -165,11 +163,11 @@ export function DailyDrop({ drop }: { drop: DailyDropData }) {
           </div>
         </div>
 
-        <DropRail>
+        <div className="mx-auto flex max-w-3xl flex-col gap-4 sm:gap-5">
           {products.map((product, i) => (
             <DropCard key={product.id} product={product} index={i} />
           ))}
-        </DropRail>
+        </div>
 
         <div className="mt-10 flex justify-center">
           <Link prefetch={false}

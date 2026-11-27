@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { OrderWithRelations } from "@/lib/dal/orders";
 import { ArrowRight, ShoppingBag } from "lucide-react";
+import { paymentIssue } from "@/lib/order-status";
 
 interface RecentOrdersWidgetProps {
   orders: OrderWithRelations[];
@@ -126,7 +127,16 @@ export function RecentOrdersWidget({ orders }: RecentOrdersWidgetProps) {
                         {order.customerEmail || order.customerPhone}
                       </div>
                     </td>
-                    <td className="py-3.5 pr-4">{getStatusBadge(order.status)}</td>
+                    <td className="py-3.5 pr-4">
+                      {(() => {
+                        const issue = order.channel === "ONLINE" ? paymentIssue(order.status, order.payment?.status) : null;
+                        return issue ? (
+                          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${issue.adminClass}`}>{issue.label}</span>
+                        ) : (
+                          getStatusBadge(order.status)
+                        );
+                      })()}
+                    </td>
                     <td className="py-3.5 pr-4 text-xs text-gray-600">
                       {order.items.length} {order.items.length === 1 ? "item" : "items"}
                     </td>

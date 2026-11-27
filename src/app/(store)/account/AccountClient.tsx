@@ -6,6 +6,7 @@ import Link from "next/link";
 import { format } from "date-fns";
 import { OrderWithRelations } from "@/lib/dal/orders";
 import { Address } from "@prisma/client";
+import { paymentIssue } from "@/lib/order-status";
 
 interface AccountClientProps {
   session: { name: string; email: string; phone: string };
@@ -191,7 +192,7 @@ export function AccountClient({ session, orders }: AccountClientProps) {
                       <div className="text-right">
                         <p className="font-medium">₹{order.total.toLocaleString('en-IN')}</p>
                         <span className="inline-block px-2 py-1 mt-1 text-[11px] font-medium uppercase tracking-wider bg-secondary rounded-sm">
-                          {order.status}
+                          {paymentIssue(order.status, order.payment?.status, "customer")?.label ?? order.status}
                         </span>
                       </div>
                     </div>

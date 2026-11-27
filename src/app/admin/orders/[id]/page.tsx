@@ -5,6 +5,7 @@ import { ArrowLeft, Download } from "lucide-react";
 import { buildBill } from "@/lib/bill";
 import { format } from "date-fns";
 import OrderStatusSelect from "./OrderStatusSelect";
+import { paymentIssue } from "@/lib/order-status";
 
 export const metadata = {
   title: "Order Details | Admin",
@@ -63,7 +64,15 @@ export default async function OrderDetailPage({
               {cancelled ? "Cancelled" : "Paid at the shop"}
             </span>
           ) : (
-            <OrderStatusSelect orderId={order.id} initialStatus={order.status} />
+            <>
+              {(() => {
+                const issue = paymentIssue(order.status, order.payment?.status);
+                return issue ? (
+                  <span className={`inline-flex items-center rounded-full px-3 py-1.5 text-sm font-medium ring-1 ring-inset ${issue.adminClass}`}>{issue.label}</span>
+                ) : null;
+              })()}
+              <OrderStatusSelect orderId={order.id} initialStatus={order.status} />
+            </>
           )}
         </div>
       </div>

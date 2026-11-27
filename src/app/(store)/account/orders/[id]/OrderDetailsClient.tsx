@@ -4,6 +4,7 @@ import Link from "next/link";
 import { cldImage } from "@/lib/images";
 import { ArrowLeft, ExternalLink, Package } from "lucide-react";
 import { buildBill } from "@/lib/bill";
+import { paymentIssue } from "@/lib/order-status";
 
 export default function OrderDetailsClient({ order }: { order: any }) {
   const bill = buildBill(order);
@@ -45,7 +46,7 @@ export default function OrderDetailsClient({ order }: { order: any }) {
         </div>
         <div className="flex items-center gap-3">
           <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider ${getStatusColor(order.status)}`}>
-            {order.status}
+            {paymentIssue(order.status, order.payment?.status, "customer")?.label ?? order.status}
           </span>
           {order.trackingUrl && (
             <a href={order.trackingUrl} target="_blank" rel="noreferrer" className="inline-flex items-center text-sm font-medium text-primary hover:underline">

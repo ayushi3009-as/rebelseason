@@ -328,7 +328,8 @@ export async function finalizePaidOrder(params: {
 
     const order = await tx.order.update({
       where: { id: payment.orderId },
-      data: { status: "CONFIRMED" },
+      // A payment can land after the order was auto-closed; reopen it.
+      data: { status: "CONFIRMED", cancelledAt: null, cancelReason: null },
       select: { couponCode: true, customerId: true, items: { select: { productId: true, variantId: true, quantity: true, name: true } } },
     });
 
