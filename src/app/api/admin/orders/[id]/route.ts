@@ -33,7 +33,9 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { status, trackingUrl } = body as { status: OrderStatus; trackingUrl?: string };
+    const { status } = body as { status: OrderStatus };
+    const trackingNumber = typeof body.trackingNumber === "string" ? body.trackingNumber.trim() : "";
+    const trackingUrl = typeof body.trackingUrl === "string" ? body.trackingUrl.trim() : "";
 
     if (!Object.values(OrderStatus).includes(status)) {
       return NextResponse.json({ error: "Invalid status" }, { status: 400 });
@@ -54,8 +56,18 @@ export async function PUT(
     }
 
     const updateData: any = { status };
-    if (status === "SHIPPED" && trackingUrl) {
-      updateData.trackingUrl = trackingUrl;
+    if (status === "SHIPPED") {
+      if (!trackingNumber) {
+        return NextResponse.json({ error: "Enter the tracking number." }, { status: 400 });
+      }
+      if (trackingNumber.length > 60) {
+        return NextResponse.json({ error: "The tracking number is too long." }, { status: 400 });
+      }
+      if (trackingUrl && !/^https?:\/\/\S+$/i.test(trackingUrl)) {
+        return NextResponse.json({ error: "The tracking page link must start with http:// or https://" }, { status: 400 });
+      }
+      updateData.trackingNumber = trackingNumber;
+      updateData.trackingUrl = trackingUrl || null;
     }
 
     // Cancelling an order that was already paid puts its pieces back on the shelf (shop and website).
@@ -79,8 +91,8 @@ export async function PUT(
     });
     if (returnsStock) revalidateCatalog();
 
-    if (status === "SHIPPED" && trackingUrl && updatedOrder.customerEmail) {
-      await sendShippingNotificationEmail(updatedOrder.customerEmail, updatedOrder, trackingUrl);
+    if (status === "SHIPPED" && updatedOrder.customerEmail) {
+      await sendShippingNotificationEmail(updatedOrder.customerEmail, updatedOrder, { trackingNumber, trackingUrl: trackingUrl || null });
     }
 
     return NextResponse.json(updatedOrder);

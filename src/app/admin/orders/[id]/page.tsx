@@ -227,15 +227,28 @@ export default async function OrderDetailPage({
           {!isShop && (
           <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
             <h2 className="text-lg font-medium text-gray-900 mb-4">Tracking Information</h2>
-            {(order as any).trackingUrl ? (
-              <a 
-                href={(order as any).trackingUrl} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-sm text-blue-600 hover:underline break-all"
-              >
-                {(order as any).trackingUrl}
-              </a>
+            {(order as any).trackingNumber || (order as any).trackingUrl ? (
+              <div className="space-y-2 text-sm">
+                {(order as any).trackingNumber && (
+                  <div>
+                    <p className="text-gray-500">Tracking number</p>
+                    <p className="font-mono font-medium text-gray-900 break-all">{(order as any).trackingNumber}</p>
+                  </div>
+                )}
+                {(order as any).trackingUrl && (
+                  <div>
+                    <p className="text-gray-500">Tracking page</p>
+                    <a
+                      href={(order as any).trackingUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline break-all"
+                    >
+                      {(order as any).trackingUrl}
+                    </a>
+                  </div>
+                )}
+              </div>
             ) : (
               <p className="text-sm text-gray-500">No tracking information available</p>
             )}

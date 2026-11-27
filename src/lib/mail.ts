@@ -219,10 +219,29 @@ export async function sendOrderConfirmationEmail(to: string, order: any): Promis
   }
 }
 
-export async function sendShippingNotificationEmail(to: string, order: any, trackingUrl: string): Promise<boolean> {
+export async function sendShippingNotificationEmail(
+  to: string,
+  order: any,
+  tracking: { trackingNumber: string; trackingUrl?: string | null }
+): Promise<boolean> {
   const address = typeof order.shippingAddress === 'string'
     ? JSON.parse(order.shippingAddress)
     : order.shippingAddress;
+  const { trackingNumber, trackingUrl } = tracking;
+
+  const trackingHtml = trackingUrl
+    ? `
+    <p style="margin: 0 0 16px; font-size: 15px; color: #444444; line-height: 1.5; text-align: center;">
+      To see where your parcel is, open the tracking page below and enter your tracking number.
+    </p>
+    <div style="text-align: center; margin: 0 0 12px;">
+      <a href="${safeUrl(trackingUrl)}" style="display: inline-block; background-color: #db2777; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 6px; font-weight: 600; font-size: 15px;">Open Tracking Page</a>
+    </div>
+    <p style="margin: 0 0 24px; font-size: 12px; color: #888888; text-align: center; word-break: break-all;">${esc(trackingUrl)}</p>`
+    : `
+    <p style="margin: 0 0 24px; font-size: 15px; color: #444444; line-height: 1.5; text-align: center;">
+      Use this number on the courier's website or app to follow your parcel. Reply to this email if you need help tracking it.
+    </p>`;
 
   const html = wrapHtml(`
     <h2 style="margin: 0 0 16px; font-size: 24px; color: #111111; text-align: center;">Your Order is On Its Way! \ud83d\udce6</h2>
@@ -230,9 +249,11 @@ export async function sendShippingNotificationEmail(to: string, order: any, trac
       Great news! Your order <strong style="color: #111111;">#${esc(order.orderNumber)}</strong> has been shipped and is on its way to you.
     </p>
 
-    <div style="text-align: center; margin: 32px 0;">
-      <a href="${safeUrl(trackingUrl)}" style="display: inline-block; background-color: #db2777; color: #ffffff; text-decoration: none; padding: 16px 32px; border-radius: 6px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px rgba(219, 39, 119, 0.25);">Track Your Order</a>
+    <div style="background-color: #FDF0F4; border-radius: 8px; padding: 20px; margin: 0 0 24px; text-align: center;">
+      <p style="margin: 0 0 8px; font-size: 12px; color: #666666; text-transform: uppercase; letter-spacing: 1px;">Tracking number</p>
+      <p style="margin: 0; font-size: 22px; font-weight: 700; color: #111111; letter-spacing: 1px; word-break: break-all; font-family: 'Courier New', Courier, monospace;">${esc(trackingNumber)}</p>
     </div>
+    ${trackingHtml}
 
     <div style="background-color: #f9f9f9; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
       <h3 style="margin: 0 0 12px; font-size: 16px; color: #111111;">Shipping To:</h3>
@@ -242,18 +263,28 @@ export async function sendShippingNotificationEmail(to: string, order: any, trac
     </div>
   `);
 
+  const text = [
+    "Your order #" + order.orderNumber + " has shipped.",
+    "",
+    "Tracking number: " + trackingNumber,
+    trackingUrl ? "Track it here (enter the tracking number on the page): " + trackingUrl : "Reply to this email if you need help tracking your parcel.",
+    "",
+    "Shipping to: " + [address.name, address.street, address.city + ", " + address.state + " " + address.pincode].join(", "),
+  ].join("\n");
+
   const mailOptions = {
     from: `"The Rebel Season" <${FROM_ADDRESS}>`,
     replyTo: siteConfig.supportEmail,
     to,
     subject: "Your Order #" + order.orderNumber + " Has Shipped!",
+    text,
     html,
   };
 
   try {
     if (!process.env.EMAIL_USER || !process.env.EMAIL_APP_PASSWORD) {
       console.log("\n=========================================");
-      console.log("[MOCK EMAIL] Shipping Notification for " + to + ", Tracking: " + trackingUrl);
+      console.log("[MOCK EMAIL] Shipping Notification for " + to + ", Tracking number: " + trackingNumber + (trackingUrl ? ", page: " + trackingUrl : ""));
       console.log("=========================================\n");
       return true;
     }

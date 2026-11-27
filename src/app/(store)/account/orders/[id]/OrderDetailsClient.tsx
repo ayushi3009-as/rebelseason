@@ -48,6 +48,11 @@ export default function OrderDetailsClient({ order }: { order: any }) {
           <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider ${getStatusColor(order.status)}`}>
             {paymentIssue(order.status, order.payment?.status, "customer")?.label ?? order.status}
           </span>
+          {order.trackingNumber && (
+            <span className="text-sm text-muted-foreground">
+              Tracking no. <span className="font-mono font-medium text-foreground select-all">{order.trackingNumber}</span>
+            </span>
+          )}
           {order.trackingUrl && (
             <a href={order.trackingUrl} target="_blank" rel="noreferrer" className="inline-flex items-center text-sm font-medium text-primary hover:underline">
               Track Order <ExternalLink className="w-3 h-3 ml-1" />

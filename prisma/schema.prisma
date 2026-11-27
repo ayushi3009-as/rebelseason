@@ -242,6 +242,8 @@ model Order {
   instagramUsername String?
   shippingAddress Json
   trackingUrl     String?
+  // Courier tracking number the customer enters on the courier's tracking page (trackingUrl).
+  trackingNumber  String?
   couponCode      String?
   // Admin/system notes, e.g. a payment that arrived after the last piece sold (refund needed).
   notes           String?
